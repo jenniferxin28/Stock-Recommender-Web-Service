@@ -1,0 +1,22 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Service Page</title>
+        <link rel="stylesheet" href="{% static 'single_page_app/service_page.css' %}">
+        <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    </head>
+    <body>
+        <div class="navbar">
+            <a href="{% url 'single_page_app:index' %}">Home</a>
+            <a href="{% url 'single_page_app:help' %}">Help</a>
+            <a href="{% url 'single_page_app:about' %}">About</a>
+            <a href="{% url 'single_page_app:service' %}">Service</a>
+            <a href="{% url 'single_page_app:data' %}">Data Presenting</a>
+        </div>
+        <div class="content">
+            <h2 class="title">Stock Volume Traded</h2>
+            <div id="converted_fig">{{ converted_fig|safe }}</div>
+        </div>
+    </body>
+</html>

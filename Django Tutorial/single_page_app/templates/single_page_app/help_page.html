@@ -1,0 +1,21 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Help Page</title>
+        <link rel="stylesheet" href="{% static 'single_page_app/help_page.css' %}">
+    </head>
+    <body>
+        <div class="navbar">
+            <a href="{% url 'single_page_app:index' %}">Home</a>
+            <a href="{% url 'single_page_app:help' %}">Help</a>
+            <a href="{% url 'single_page_app:about' %}">About</a>
+            <a href="{% url 'single_page_app:service' %}">Service</a>
+            <a href="{% url 'single_page_app:data' %}">Data Presenting</a>
+        </div>
+        <div class="content">
+            <h1>Help Page</h1>
+            <p>Page under construction, please check back later.</p>
+        </div>
+    </body>
+</html>
