@@ -10825,8 +10825,9 @@ a:focus {
 }
 
 .chart-area {
+  display: flex;
   position: relative;
-  height: 10rem;
+  height: 100%;
   width: 100%;
 }
 
