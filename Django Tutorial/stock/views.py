@@ -8,7 +8,9 @@ import plotly.express as px
 import plotly.graph_objects as go
 from scipy.stats import linregress
 import numpy as np
-from .models import SP500Stocks
+from .models import SP500Stocks, DOWStocks, NASDAQStocks, RUSSELLStocks
+from django.http import HttpResponse
+import csv
 
 # Create your views here.
 
@@ -40,45 +42,131 @@ def get_market_summary(ticker):
         'stock_change_color': stock_change_color,
     }
 def index(request):
-    sp500_index = "^GSPC"
-    sp500_obj = yf.Ticker(sp500_index)
-    sp500_df = sp500_obj.history(period='5y')
-    years = pd.date_range(start=sp500_df.index.min(), end=sp500_df.index.max(), freq='YS')
+    sp500fig_converted = setup_index_chart("^GSPC", 'S&P 500 Performance Over the Past Year')
+    dowfig_converted = setup_index_chart("^DJI", 'DOW Performance Over the Past Year')
+    nasdaqfig_converted = setup_index_chart("^IXIC", 'NASDAQ Performance Over the Past Year')
 
-    fig = go.Figure(data=go.Scatter(x=sp500_df.index, y=sp500_df['Close'], mode='lines', name='Close'))
-
-    fig.update_layout(title='S&P 500 Performance Over the Past 5 Years',
-                    xaxis=dict(
-                        title='Year',
-                        tickmode='array',
-                        tickvals=years,  # place tick at start of year
-                        tickformat='%Y', # formatting for only year
-                        ),
-                    yaxis_title='Closing Price',
-                    template='seaborn',
-                    autosize=True) 
-
-    x = np.arange(len(sp500_df.index))
-    y = sp500_df['Close'].values
-    slope, intercept, r_value, p_value, std_err = linregress(x, y)
-    y_regression = intercept + slope * x
-    fig.add_trace(go.Scatter(x=sp500_df.index, y=y_regression, mode='lines', name='Regression Line', line=dict(color='red')))
-    sp500fig_converted = fig.to_html(full_html=False)
-
-    # market summary 
-    sp500_summary = get_market_summary("^GSPC")
-    nasdaq_summary = get_market_summary("^IXIC")
-    dow_summary = get_market_summary("^DJI")
-    russel_summary = get_market_summary("^RUT")
-    # top 10 SP500 Stocks
-    top_sp500_stocks = SP500Stocks.objects.all()[:10]
     context = {
         'sp500fig_converted': sp500fig_converted,
-        'top_sp500_stocks': top_sp500_stocks,
-        'sp500': sp500_summary,
-        'nasdaq': nasdaq_summary,
-        'dow': dow_summary,
-        'russel': russel_summary
-               
-        }
+        'dowfig_converted': dowfig_converted,
+        'nasdaqfig_converted': nasdaqfig_converted,
+        'top_sp500_stocks': SP500Stocks.objects.all()[:10],
+        'top_dow_stocks': DOWStocks.objects.all()[:10],
+        'top_nasdaq_stocks': NASDAQStocks.objects.all().order_by('-score')[:10],
+        'sp500': get_market_summary("^GSPC"),
+        'nasdaq': get_market_summary("^IXIC"),
+        'dow': get_market_summary("^DJI"),
+        'russel': get_market_summary("^RUT")
+    }
     return render(request, "stock/index.html", context)
+
+def regression_line(df, fig):
+    x = np.arange(len(df.index))
+    y = df['Close'].values
+    slope, intercept, _, _, _ = linregress(x, y)
+    fig.add_trace(go.Scatter(x=df.index, y=intercept + slope * x, mode='lines', name='Regression Line', line=dict(color='red')))
+
+def setup_index_chart(ticker, title):
+    obj = yf.Ticker(ticker)
+    df = obj.history(period='1y')
+    fig = go.Figure(data=go.Scatter(x=df.index, y=df['Close'], mode='lines', name='Close'))
+    fig.update_layout(
+        title=title,
+        xaxis=dict(title='Date', tickmode='array', tickvals=pd.date_range(start=df.index.min(), end=df.index.max(), freq='M'), tickformat='%b %Y', autorange=True),
+        yaxis=dict(title='Closing Price', autorange=True),
+        template='seaborn',
+        autosize=True,
+        
+    )
+    regression_line(df, fig)
+    return fig.to_html(full_html=False, include_plotlyjs='cdn')
+
+# download list button
+def download_stock_list(request):
+    # creating http response object with the appropriate CSV header.
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': 'attachment; filename="recommended_stocks.csv"'},
+    )
+    
+    writer = csv.writer(response)
+    writer.writerow(['Type', 'Symbol', 'Score', 'Company Name', 'Last Close Price', 'Slope', 'RSI', 'P/E Ratio'])
+
+    # S&P 500
+    for stock in SP500Stocks.objects.order_by('-score')[:10]:
+        ticker_obj = yf.Ticker(stock.symbol)
+        hist = ticker_obj.history(period="7d") 
+
+        writer.writerow(['S&P 500', stock.symbol, stock.score, ticker_obj.info['shortName'], hist['Close'].iloc[-1], stock.slope, stock.rsi, stock.pe_ratio])
+    # NASDAQ
+    for stock in NASDAQStocks.objects.order_by('-score')[:10]:
+        ticker_obj = yf.Ticker(stock.symbol)
+        hist = ticker_obj.history(period="7d") 
+
+        writer.writerow(['NASDAQ', stock.symbol, stock.score, ticker_obj.info['shortName'], hist['Close'].iloc[-1], stock.slope, stock.rsi, stock.pe_ratio])
+    # DOW
+    for stock in DOWStocks.objects.order_by('-score')[:10]:
+        ticker_obj = yf.Ticker(stock.symbol)
+        hist = ticker_obj.history(period="7d") 
+
+        writer.writerow(['DOW', stock.symbol, stock.score, ticker_obj.info['shortName'], hist['Close'].iloc[-1], stock.slope, stock.rsi, stock.pe_ratio])
+    return response
+
+
+def create_stock_chart(stock_symbols, title, period='3y'):
+    """
+    Create a line chart for given stock symbols over a specified period.
+    
+    Args:
+        stock_symbols (list of str): List of stock ticker symbols.
+        title (str): Title of the chart.
+        period (str): Period of historical data to fetch, default is '3y' (3 years).
+    
+    Returns:
+        str: HTML string of the created Plotly chart.
+    """
+    fig = go.Figure()
+
+    for symbol in stock_symbols:
+        ticker = yf.Ticker(symbol)
+        hist = ticker.history(period=period)
+
+        fig.add_trace(go.Scatter(x=hist.index, y=hist['Close'], mode='lines', name=symbol))
+
+
+    fig.update_layout(
+        title=title,
+        xaxis_title='Date',
+        yaxis_title='Closing Price',
+        template='seaborn',
+        autosize=True  
+    )
+
+    # html link
+    return fig.to_html(full_html=False, include_plotlyjs='cdn')
+
+# charts.html
+def charts(request):
+
+    # sp500
+    top_10_sp500 = SP500Stocks.objects.order_by('-score')[:10].values_list('symbol', flat=True)
+    sp500_chart = create_stock_chart(list(top_10_sp500), 'Top 10 S&P 500 Stocks Closing Prices')
+
+    # nasdaq
+    top_10_nasdaq = NASDAQStocks.objects.order_by('-score')[:10].values_list('symbol', flat=True)
+    nasdaq_chart = create_stock_chart(list(top_10_nasdaq), 'Top 10 NASDAQ Stocks Closing Prices')
+
+    # dow
+    top_10_dow = DOWStocks.objects.order_by('-score')[:10].values_list('symbol', flat=True)
+    dow_chart = create_stock_chart(list(top_10_dow), 'Top 10 DOW Stocks Closing Prices')
+
+    context = {
+        'sp500_chart': sp500_chart,
+        'nasdaq_chart': nasdaq_chart,
+        'dow_chart': dow_chart,
+        'top_sp500_stocks': SP500Stocks.objects.all().order_by('-score')[:10],
+        'top_dow_stocks': DOWStocks.objects.all().order_by('-score')[:10],
+        'top_nasdaq_stocks': NASDAQStocks.objects.all().order_by('-score')[:10],
+    }
+
+    return render(request, "stock/charts.html", context)

@@ -10,7 +10,7 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>Stock Recommender - Dashboard</title>
+    <title>Stock Recommender - Stock Information</title>
 
     <!-- Custom fonts for this template-->
     <link href="{% static 'stock/vendor/fontawesome-free/css/all.min.css' %}" rel="stylesheet" type="text/css">
@@ -61,7 +61,7 @@
 
             <!-- Nav Item - Charts -->
             <li class="nav-item">
-                <a class="nav-link" href="{%url 'stock:charts' %}">
+                <a class="nav-link" href="{% url 'stock:charts' %}">
                     <i class="fas fa-fw fa-chart-area"></i>
                     <span>Stock Information</span></a>
             </li>
@@ -141,7 +141,7 @@
 
                     <!-- Page Heading -->
                     <div class="d-sm-flex align-items-center justify-content-between mb-4">
-                        <h1 class="h3 mb-0 text-gray-800">Dashboard</h1>
+                        <h1 class="h3 mb-0 text-gray-800">Stock Information</h1>
                         <a href="{% url 'stock:download-stocks' %}" class="d-none d-sm-inline-block btn btn-sm btn-primary shadow-sm">
                             <i class="fas fa-download fa-sm text-white-50"></i> Download List
                         </a>
@@ -149,109 +149,7 @@
                     </div>
 
                     <!-- Content Row -->
-                    <div class="row">
-
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card shadow h-100 py-2" style="border-left: 0.25rem solid #4e73df">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color:#4e73df;">
-                                                S&P 500
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color:#5a5c69;">
-                                                {{ sp500.stock_value }} <small style="color: {{ sp500.stock_change_color }};">{{ sp500.stock_change_percentage }}</small>
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color: {{ sp500.stock_change_color }};">
-                                                {{ sp500.stock_point_change }}
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-arrow-trend-up fa-2x text-gray-300" ></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        
-
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-success shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color:#4e73df;">
-                                                NASDAQ
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color:#5a5c69;">
-                                                {{ nasdaq.stock_value }} <small style="color: {{ nasdaq.stock_change_color }};">{{ nasdaq.stock_change_percentage }}</small>
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color: {{ nasdaq.stock_change_color }};">
-                                                {{ nasdaq.stock_point_change }}
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-arrow-trend-up fa-2x text-gray-300" ></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Earnings (Monthly) Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-info shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color:#4e73df;">
-                                                DOW
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color:#5a5c69;">
-                                                {{ dow.stock_value }} <small style="color: {{ dow.stock_change_color }};">{{ dow.stock_change_percentage }}</small>
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color: {{ dow.stock_change_color }};">
-                                                {{ dow.stock_point_change }}
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-arrow-trend-up fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Pending Requests Card Example -->
-                        <div class="col-xl-3 col-md-6 mb-4">
-                            <div class="card border-left-warning shadow h-100 py-2">
-                                <div class="card-body">
-                                    <div class="row no-gutters align-items-center">
-                                        <div class="col mr-2">
-                                            <div class="text-xs font-weight-bold text-uppercase mb-1" style="color:#4e73df;">
-                                                Russell
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color:#5a5c69;">
-                                                {{ russel.stock_value }} <small style="color: {{ russel.stock_change_color }};">{{ russel.stock_change_percentage }}</small>
-                                            </div>
-                                            <div class="h5 mb-0 font-weight-bold" style="color: {{ russel.stock_change_color }};">
-                                                {{ russel.stock_point_change }}
-                                            </div>
-                                            
-                                        </div>
-                                        <div class="col-auto">
-                                            <i class="fas fa-arrow-trend-up fa-2x text-gray-300"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                    
 
                     <!-- Content Row -->
 
@@ -284,7 +182,7 @@
                                                 <!-- Card Body -->
                                                 <div class="card-body">
                                                     <div class="chart-area">
-                                                        <div id="sp500fig_converted">{{ sp500fig_converted|safe }}</div>
+                                                        <div id="sp500fig_converted">{{ sp500_chart|safe }}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -297,11 +195,14 @@
                                                 </div>
                                                 <!-- Card Body -->
                                                 <div class="card-body">
+
                                                     <ul class="list-group list-group-flush">
                                                         {% for stock in top_sp500_stocks %}
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                                             {{ stock.symbol }}
-                                                            <span class="badge badge-primary badge-pill">{{ stock.score }}</span>
+                                                            <span class="badge badge-success badge-pill">{{ stock.slope }}</span>
+                                                            <span class="badge badge-info badge-pill">{{ stock.pe_ratio }}</span>
+                                                            <span class="badge badge-warning badge-pill">{{ stock.rsi }}</span>
                                                         </li>
                                                         {% empty %}
                                                         <li class="list-group-item">No stocks available.</li>
@@ -309,8 +210,14 @@
                                                     </ul>
                                                     <div class="mt-4 text-center small">
                                                         <span class="mr-2">
-                                                            <i class="fas fa-circle text-primary"></i> Score
-                                                        </span>                                                 
+                                                            <i class="fas fa-circle text-success"></i> Slope
+                                                        </span>
+                                                        <span class="mr-2">
+                                                            <i class="fas fa-circle text-info"></i> P/E Ratio
+                                                        </span>
+                                                        <span class="mr-2">
+                                                            <i class="fas fa-circle text-warning"></i> RSI Index
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -327,7 +234,7 @@
                                                 <!-- Card Body -->
                                                 <div class="card-body">
                                                     <div class="chart-area">
-                                                        <div id="nasdaqfig_converted">{{ nasdaqfig_converted|safe }}</div>
+                                                        <div id="nasdaqfig_converted">{{ nasdaq_chart|safe }}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -340,11 +247,14 @@
                                                 </div>
                                                 <!-- Card Body -->
                                                 <div class="card-body">
+
                                                     <ul class="list-group list-group-flush">
                                                         {% for stock in top_nasdaq_stocks %}
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                                             {{ stock.symbol }}
-                                                            <span class="badge badge-primary badge-pill">{{ stock.score }}</span>
+                                                            <span class="badge badge-success badge-pill">{{ stock.slope }}</span>
+                                                            <span class="badge badge-info badge-pill">{{ stock.pe_ratio }}</span>
+                                                            <span class="badge badge-warning badge-pill">{{ stock.rsi }}</span>
                                                         </li>
                                                         {% empty %}
                                                         <li class="list-group-item">No stocks available.</li>
@@ -352,8 +262,14 @@
                                                     </ul>
                                                     <div class="mt-4 text-center small">
                                                         <span class="mr-2">
-                                                            <i class="fas fa-circle text-primary"></i> Score
-                                                        </span>                                                 
+                                                            <i class="fas fa-circle text-success"></i> Slope
+                                                        </span>
+                                                        <span class="mr-2">
+                                                            <i class="fas fa-circle text-info"></i> P/E Ratio
+                                                        </span>
+                                                        <span class="mr-2">
+                                                            <i class="fas fa-circle text-warning"></i> RSI Index
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
@@ -370,7 +286,7 @@
                                                 <!-- Card Body -->
                                                 <div class="card-body">
                                                     <div class="chart-area">
-                                                        <div id="dow_converted" style="width: 100%;">{{ dowfig_converted|safe }}</div>
+                                                        <div id="dow_converted" style="width: 100%;">{{ dow_chart|safe }}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -383,11 +299,14 @@
                                                 </div>
                                                 <!-- Card Body -->
                                                 <div class="card-body">
+
                                                     <ul class="list-group list-group-flush">
                                                         {% for stock in top_dow_stocks %}
                                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                                             {{ stock.symbol }}
-                                                            <span class="badge badge-primary badge-pill">{{ stock.score }}</span>
+                                                            <span class="badge badge-success badge-pill">{{ stock.slope }}</span>
+                                                            <span class="badge badge-info badge-pill">{{ stock.pe_ratio }}</span>
+                                                            <span class="badge badge-warning badge-pill">{{ stock.rsi }}</span>
                                                         </li>
                                                         {% empty %}
                                                         <li class="list-group-item">No stocks available.</li>
@@ -395,8 +314,14 @@
                                                     </ul>
                                                     <div class="mt-4 text-center small">
                                                         <span class="mr-2">
-                                                            <i class="fas fa-circle text-primary"></i> Score
-                                                        </span>                                                 
+                                                            <i class="fas fa-circle text-success"></i> Slope
+                                                        </span>
+                                                        <span class="mr-2">
+                                                            <i class="fas fa-circle text-info"></i> P/E Ratio
+                                                        </span>
+                                                        <span class="mr-2">
+                                                            <i class="fas fa-circle text-warning"></i> RSI Index
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>

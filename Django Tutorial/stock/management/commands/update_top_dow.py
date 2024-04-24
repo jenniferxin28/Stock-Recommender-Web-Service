@@ -1,6 +1,6 @@
 import csv
 from django.core.management.base import BaseCommand
-from stock.models import SP500Stocks
+from stock.models import SP500Stocks, NASDAQStocks, DOWStocks
 from django.conf import settings
 import os
 import pandas as pd
@@ -10,28 +10,27 @@ import numpy as np
 import requests # library to handle requests
 from bs4 import BeautifulSoup
 import time
+from yahoo_fin.stock_info import *
 
 class Command(BaseCommand):
     def handle(self, *args, **kwargs):
-        wikiurl="https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-        table_class="wikitable sortable jquery-tablesorter"
-        response=requests.get(wikiurl)
-        soup = BeautifulSoup(response.text, 'html.parser')
-        indiatable=soup.find('table',{'class':"wikitable"})
-        df=pd.read_html(str(indiatable))
-        # convert list to dataframe
-        df=pd.DataFrame(df[0])
-        sp500 = df['Symbol']
+        dow_symbols = tickers_dow(False)
         #yfinance uses dashes instead of dots - but only for historical data?
-        sp500_symbols = [item.replace(".", "-") for item in sp500]
+        dow = [item.replace(".", "-") for item in dow_symbols]
         # calculate p/e ratio
-        sp500_ratios = {}
-        for symbol in sp500:
+        dow_ratios = {}
+        for symbol in dow:
             ticker = yf.Ticker(symbol)
             ratio = ticker.info.get('trailingPE')
-            sp500_ratios[symbol] = ratio
+            try:
+                # Ensure ratio is a float before appending
+                ratio = float(ratio) if ratio is not None else None
+            except ValueError:
+                # Handle the case where conversion to float fails (e.g., if ratio is a string that cannot be converted)
+                ratio = None
+            dow_ratios[symbol] = ratio
 
-        valid_ratios = [ratio for ratio in sp500_ratios.values() if ratio is not None]
+        valid_ratios = [ratio for ratio in dow_ratios.values() if ratio is not None]
         average_pe_ratio = sum(valid_ratios) / len(valid_ratios) if valid_ratios else None
         std_pe_ratio = np.std(valid_ratios) if valid_ratios else None
         max_pe_ratio = max(valid_ratios)
@@ -41,7 +40,7 @@ class Command(BaseCommand):
         #print(f'Max P/E ratio: {max_pe_ratio}')
         #print(f'Min P/E ratio: {min_pe_ratio}')
         # convert to np array
-        valid_ratios = np.array([ratio for ratio in sp500_ratios.values() if ratio is not None])
+        valid_ratios = np.array([ratio for ratio in dow_ratios.values() if ratio is not None])
         Q1 = np.percentile(valid_ratios, 25)
         Q3 = np.percentile(valid_ratios, 75)
         # calculate IQR
@@ -61,7 +60,7 @@ class Command(BaseCommand):
         def fetch_data_with_retry(symbol, retries=6, delay=1):
             for attempt in range(retries):
                 try:
-                    return yf.Ticker(symbol).history(period="5y")
+                    return yf.Ticker(symbol).history(period="1y")
                 except Exception as e:
                     print(f"Attempt {attempt+1} failed: {e}")
                     time.sleep(delay)
@@ -80,7 +79,7 @@ class Command(BaseCommand):
             return rsi.dropna()
 
         results = []
-        for symbol in sp500_symbols:
+        for symbol in dow_symbols:
             stock_data = fetch_data_with_retry(symbol, retries=6, delay=1)
             if stock_data is None or stock_data.empty:
                 print(f"Data for {symbol} is empty or could not be fetched.")
@@ -96,7 +95,7 @@ class Command(BaseCommand):
             # Calculate linear regression for each stock
             slope_stock, intercept_stock, _, _, _ = linregress(x_stock, y_stock)
             # P/E ratio
-            pe_ratio = sp500_ratios[symbol.replace("-", ".")]
+            pe_ratio = dow_ratios[symbol.replace("-", ".")]
             results.append({'Symbol': symbol, 'Slope': slope_stock, 'Intercept': intercept_stock, 'RSI': rsi_stock, 'P/E Ratio': pe_ratio})
         results_df = pd.DataFrame(results)
 
@@ -108,7 +107,7 @@ class Command(BaseCommand):
             normalized = (data - data.min()) / (data.max() - data.min())
             return 1 - normalized if inverse else normalized
         # scoring weights
-        weights = {'Slope': 0.33, 'RSI': 0.34, 'P/E Ratio': 0.33}
+        weights = {'Slope': 0.45, 'RSI': 0.10, 'P/E Ratio': 0.45}
         results_df['Norm_Slope'] = normalize_series(results_df['Slope'])
         results_df['Norm_RSI'] = normalize_series(results_df['RSI'])
         results_df['Norm_PE_Ratio'] = normalize_series(results_df['P/E Ratio'], inverse=True)
@@ -124,10 +123,9 @@ class Command(BaseCommand):
         df_clean['RSI'] = pd.to_numeric(df_clean['RSI'], errors='coerce')
         df_clean['P/E Ratio'] = pd.to_numeric(df_clean['P/E Ratio'], errors='coerce')
         df_clean['Score'] = pd.to_numeric(df_clean['Score'], errors='coerce')
-
         # Django keeps having issues inserting rows with NaN even though I cleaned it multiple times
         for index, row in df_clean.iterrows():
-            stock, created = SP500Stocks.objects.update_or_create(
+            stock, created = DOWStocks.objects.update_or_create(
                 symbol=row['Symbol'], 
                 defaults={
                     'slope': None if pd.isna(row['Slope']) else round(row['Slope'], 5),

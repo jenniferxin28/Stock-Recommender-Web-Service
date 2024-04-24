@@ -4528,6 +4528,19 @@ input[type="button"].btn-block {
   padding: 1.25rem;
 }
 
+#sp500fig_converted {
+  width: 100%;  /* Use 100% width to fill the container */
+  height: 100%; /* Use 100% height to fill the container, make sure parents have a height defined */
+}
+#dowfig_converted {
+  width: 100%;  /* Use 100% width to fill the container */
+  height: 100%; /* Use 100% height to fill the container, make sure parents have a height defined */
+}
+#nasdaqfig_converted {
+  width: 100%;
+  height: 100%;
+}
+
 .card-title {
   margin-bottom: 0.75rem;
 }
@@ -10827,9 +10840,12 @@ a:focus {
 .chart-area {
   display: flex;
   position: relative;
-  height: 100%;
+  height: auto;
   width: 100%;
+  min-height: 450px;
 }
+
+
 
 @media (min-width: 768px) {
   .chart-area {
