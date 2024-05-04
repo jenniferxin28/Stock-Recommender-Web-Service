@@ -1,0 +1,24 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+    <link rel="stylesheet" href="{% static 'single_page_app/clock2.css' %}">
+</head>
+<body>
+    <div class="navbar">
+        <a href="{% url 'single_page_app:index' %}">Home</a>
+        <a href="{% url 'single_page_app:help' %}">Help</a>
+        <a href="{% url 'single_page_app:about' %}">About</a>
+        <a href="{% url 'single_page_app:service' %}">Service</a>
+        <a href="{% url 'single_page_app:data' %}">Data Presenting</a>
+    </div>
+    <div class="container">
+        <div id="clock">8:10:45</div>
+    </div>
+ 
+    <script src="{% static 'single_page_app/clock2.js' %}"></script>
+</body>
+</html>

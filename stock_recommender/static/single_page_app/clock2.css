@@ -1,0 +1,43 @@
+.container {
+	display: flex;
+	justify-content: center; 
+	align-items: center; 
+	height: 100vh; 
+  }
+#clock {
+	font-size: 175px;
+	width: 1200px;
+	margin: 200px;
+	text-align: center;
+	border: 2px solid rgb(42, 59, 242);
+	border-radius: 20px;
+	box-shadow: 0 0 15px rgb(80, 80, 235);
+	color: white;
+	background-color: black;
+	font-family: 'Brush Script MT', cursive;
+}
+.navbar {
+	background-color: #333;
+	overflow: hidden;
+	text-align: center;
+	font-family: Verdana, Geneva, Tahoma, sans-serif;
+}
+.navbar a {
+	float: none;
+	display: inline-block;
+	color: white;
+	text-align: center;
+	padding: 14px 16px;
+	text-decoration: none;
+}
+
+.navbar a:hover {
+	background-color: #ddd;
+	color: black;
+}
+
+body {
+	margin: 0;
+    padding: 0;
+	background-image: url(background.jpg);
+}
