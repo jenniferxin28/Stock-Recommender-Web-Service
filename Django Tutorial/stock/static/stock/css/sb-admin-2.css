@@ -4528,17 +4528,9 @@ input[type="button"].btn-block {
   padding: 1.25rem;
 }
 
-#sp500fig_converted {
-  width: 100%;  /* Use 100% width to fill the container */
-  height: 100%; /* Use 100% height to fill the container, make sure parents have a height defined */
-}
-#dowfig_converted {
-  width: 100%;  /* Use 100% width to fill the container */
-  height: 100%; /* Use 100% height to fill the container, make sure parents have a height defined */
-}
-#nasdaqfig_converted {
-  width: 100%;
-  height: 100%;
+.plotly-graph-div {
+  width: 1000px;
+  height: 1000px
 }
 
 .card-title {

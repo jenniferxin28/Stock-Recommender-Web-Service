@@ -1,51 +1,49 @@
-import csv
-from django.core.management.base import BaseCommand
-from stock.models import SP500Stocks, NASDAQStocks
-from django.conf import settings
-import os
 import pandas as pd
-import yfinance as yf
-from scipy.stats import linregress
+from django.core.management.base import BaseCommand
+from stock.models import SP500Stocks, NASDAQStocks, DOWStocks
 import numpy as np
-import requests # library to handle requests
-from bs4 import BeautifulSoup
-import time
-from yahoo_fin.stock_info import *
 from decimal import Decimal
 
 class Command(BaseCommand):
+
     def handle(self, *args, **kwargs):
-        stocks = NASDAQStocks.objects.exclude(slope__isnull=True, rsi__isnull=True, pe_ratio__isnull=True)
-        
-        # Create DataFrame from QuerySet
-        data = {
-            'Symbol': [stock.symbol for stock in stocks],
-            'Slope': [float(stock.slope) if stock.slope is not None else np.nan for stock in stocks],
-            'RSI': [float(stock.rsi) if stock.rsi is not None else np.nan for stock in stocks],
-            'PE_Ratio': [float(stock.pe_ratio) if stock.pe_ratio is not None else np.nan for stock in stocks]
-        }
-        df = pd.DataFrame(data)
-        # Normalize data
-        df['Norm_Slope'] = self.normalize_series(df['Slope'])
-        df['Norm_RSI'] = self.normalize_series(df['RSI'])
-        df['Norm_PE_Ratio'] = self.normalize_series(df['PE_Ratio'], inverse=True)
-        
-        # Weights
-        weights = {'Slope': 0.45, 'RSI': 0.10, 'P/E Ratio': 0.45}
-        df['Score'] = (df['Norm_Slope'] * weights['Slope'] +
-                       df['Norm_RSI'] * weights['RSI'] +
-                       df['Norm_PE_Ratio'] * weights['P/E Ratio']) * 100
+        for model, index_name in [(NASDAQStocks, 'NASDAQ'), (SP500Stocks, 'S&P 500'), (DOWStocks, 'DOW')]:
+            self.stdout.write(self.style.SUCCESS(f'Processing {index_name}'))
+            stocks = model.objects.exclude(slope__isnull=True, rsi__isnull=True, pe_ratio__isnull=True)
+            
+            data = {
+                'Symbol': [stock.symbol for stock in stocks],
+                'Slope': [float(stock.slope) if stock.slope is not None else 0 for stock in stocks],
+                'RSI': [float(stock.rsi) if stock.rsi is not None else 0 for stock in stocks],
+                'PE_Ratio': [float(stock.pe_ratio) if stock.pe_ratio is not None else 0 for stock in stocks]
+            }
+            df = pd.DataFrame(data)
 
-        # Handle NaN scores
-        df['Score'].fillna(0, inplace=True)  # Replace NaN with 0 or another appropriate value
+            # normalizing
+            # favor closer to average p/e ratio
+            # favor rsi index inbetween 30-70
+            df['Norm_Slope'] = self.normalize_series(df['Slope'])
+            df['Norm_PE_Distance'] = self.normalize_series(abs(df['PE_Ratio'] - df['PE_Ratio'].mean()), inverse=True)
+            df['Norm_RSI'] = self.normalize_series(df['RSI'])
+            # score calcs
+            df['Score'] = (
+                df['Norm_Slope'] * 0.40 +
+                df['Norm_RSI'] * 0.20 +
+                df['Norm_PE_Distance'] * 0.40
+            ) * (1.2 if ((df['RSI'] >= 30) & (df['RSI'] <= 70)).any() else 1) * 100
+            df['Score'] = df['Score'].clip(upper=100) # cap at 100
+            # update scores in the database
+            for index, row in df.iterrows():
+                score = Decimal(row['Score']).quantize(Decimal('.01')) 
+                model.objects.filter(symbol=row['Symbol']).update(score=score)
 
-        # Update the database with new scores
-        for index, row in df.iterrows():
-            if not np.isnan(row['Score']):  # Only update if score is not NaN
-                NASDAQStocks.objects.filter(symbol=row['Symbol']).update(score=row['Score'])
+            self.stdout.write(self.style.SUCCESS(f'Scores updated for {index_name}'))
 
     def normalize_series(self, series, inverse=False):
-        """ Normalize a pandas series to a 0-1 range, optionally inversing the values. """
-        series = series.astype(float)  # Ensure all data is float
-        normalized = (series - series.min()) / (series.max() - series.min())
+        min_val = series.min()
+        max_val = series.max()
+        range_val = max_val - min_val
+        if range_val == 0:
+            return series * 0 
+        normalized = (series - min_val) / range_val
         return 1 - normalized if inverse else normalized

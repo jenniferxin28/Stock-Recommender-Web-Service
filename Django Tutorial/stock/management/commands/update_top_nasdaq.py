@@ -29,7 +29,7 @@ class Command(BaseCommand):
             else:
                 sav_set.append(symbol)
         nasdaq_parts = split_list_equally(sav_set, 6)
-        nasdaq = nasdaq_parts[1]
+        nasdaq = nasdaq_parts[5]
         #yfinance uses dashes instead of dots - but only for historical data?
         nasdaq_symbols = [item.replace(".", "-") for item in nasdaq]
         # calculate p/e ratio
@@ -75,7 +75,7 @@ class Command(BaseCommand):
         def fetch_data_with_retry(symbol, retries=6, delay=1):
             for attempt in range(retries):
                 try:
-                    return yf.Ticker(symbol).history(period="1y")
+                    return yf.Ticker(symbol).history(period="1y", timeout=120)
                 except Exception as e:
                     print(f"Attempt {attempt+1} failed: {e}")
                     time.sleep(delay)
